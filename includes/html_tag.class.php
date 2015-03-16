@@ -14,20 +14,12 @@ class html_tag
 
     public function render()
     {
-        print $this->label();
-
         print $this->start_tag();
         
         if($this->tag_name == "input") return;
         
         print $this->html();
         print $this->end_tag();
-    }
-
-
-    public function label()
-    {
-        if(isset($this->label)) return "<label>$this->label</label>";
     }
     
 
@@ -46,7 +38,6 @@ class html_tag
         $tag   = "";
 
         unset($attrs['tag_name']);
-        unset($attrs['label']);
         unset($attrs['html']);
 
         foreach ($attrs as $key => $value) 

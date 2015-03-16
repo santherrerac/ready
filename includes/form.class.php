@@ -6,10 +6,13 @@ class form
     public $elements = array();
 
 
-    public function __construct($model)
+    public function __construct($model = null)
     {
-        $this->model = $model;
-        $this->construct_elements();
+        if($model)
+        {
+            $this->model = $model;
+            $this->construct_model_form();
+        }        
     }
 
 
@@ -23,15 +26,21 @@ class form
     }
 
 
-    public function construct_elements()
-    {        
+    public function construct_model_form()
+    {    
+        global $post;
         $properties = get_object_vars($this->model);
  
         foreach ($properties as $property_name => $value) 
         {
-            $input       = new html_tag("input");
+            $input       = new form_element();
             $input->id   = get_class($this->model)."[$property_name]";        
-            $input->name = $property_name;            
+            $input->name = get_class($this->model)."[$property_name]";
+
+            if(isset($post->{get_class($this->model)}))
+            {
+                $input->value = $post->{get_class($this->model)}[$property_name]; 
+            }                   
 
             $annotations = annotations::get_property_annotations($this->model, $property_name);
 
