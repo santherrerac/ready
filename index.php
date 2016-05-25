@@ -9,40 +9,44 @@ use html\input;
 
 $div = new tag("div");
 $div->attr("id", "test");
-$div->attr("name", "test_name");
-$div->data("foo", "bar");
+$div->add_class("parent");
 
-$span = new tag("span");
-$span->attr("class", "text");
-$span->html("hello world!!");
+$child_div = new tag("div");
+$child_div->add_class("child1");
+$div->append($child_div);
 
-$input = new input("select");
-$input->attr("name", "myselect");
-$input->attr("id", "myselect");
-$input->options(array("" => "", 1 => "option1", 2 => "option2"));
-// $input->value(2);
-$input->style(array("width"=>"500px"));
+$child_div2 = new tag("div");
+$child_div2->add_class("child4");
+$child_div->append($child_div2);
 
-$input2 = new input("select");
-$input2->attr("id", "myselect2");
-$input2->options(array("" => "", 1 => "a", 2 => "b"));
-$input2->add_class("dropdown");
+$child_div3 = new tag("div");
+$child_div3->add_class("child5");
+$child_div2->append($child_div3);
 
-$check = new input("checkbox");
-$check->checked(true);
-$check->value("asdf");
+$child_div = new tag("div");
+$child_div->add_class("child2");
+$child_div->append("hellow world");
+$child_div3->append($child_div);
 
-$span->add_classes(array("class2", "class3"));
+$child_div = new tag("div");
+$child_div->add_class("child3");
+$div->append($child_div);
 
-$div->html($span);
-$div->append($input);
-$div->prepend($check);
-$div->prepend("asdf");
-$div->append($input2);
+$input = new input("text");
+$input->value("hello");
+$child_div->html($input);
 
-// $div->find("select")->remove();
+$input = new input("text");
+$input->value("hello2");
+$child_div->append($input);
 
-print $div->render();
+$input = new input("text");
+$input->value("hello3");
+$child_div->append($input);
+
+// $child_div->append($div);
+
+print $div;
 
 
  ?>

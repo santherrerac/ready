@@ -4,6 +4,8 @@ namespace html;
 
 class tag 
 {
+  const INDENT_SPACES = 2;
+
   public $tag_name;
 
   protected $singleton_tags = array(
@@ -30,6 +32,7 @@ class tag
   protected $classes = array();
   protected $content_collection;
   protected $parent;
+  protected $level = 0;
 
 
   function __construct($tag_name)
@@ -44,6 +47,12 @@ class tag
     return $this->parent;
   }
 
+
+  public function set_parent(tag $parent)
+  {
+    $this->parent = $parent;
+    $this->level  = $parent->level + 1;
+  }
 
   //------------------------------- attrs related -------------------------------//
 
@@ -200,7 +209,7 @@ class tag
 
   public function html($html)
   {
-    if ($html instanceof tag) $html->parent = $this;
+    if ($html instanceof tag) $html->set_parent($this);
 
     $this->content_collection->clear();
     $this->content_collection->append($html);
@@ -209,7 +218,7 @@ class tag
 
   public function append($html)
   {
-    if ($html instanceof tag) $html->parent = $this;
+    if ($html instanceof tag) $html->set_parent($this);
 
     $this->content_collection->append($html);
   }
@@ -217,7 +226,7 @@ class tag
 
   public function prepend($html)
   {
-    if ($html instanceof tag) $html->parent = $this;
+    if ($html instanceof tag) $html->set_parent($this);
 
     $this->content_collection->prepend($html);
   }
@@ -261,33 +270,38 @@ class tag
     return (count($output)? " ": "").implode(" ", $output);
   }
 
-
+  
   protected function render_content()
   {
     $output = "";
+    $indent = str_pad("", tag::INDENT_SPACES);
+    $lines  = explode("\n", implode($this->content_collection->get_all()));
 
-    foreach ($this->content_collection->get_all() as $child) 
+    foreach ($lines as $line) 
     {
-           if ($child instanceof tag) $output .= $child->render();
-      else if(is_string($child))      $output .= $child;
+      $output .= ($line)? "\n{$indent}{$line}": "";
     }
 
-    return $output;
+    return $output."\n";
   }
 
 
   public function render()
   {
     $self_closing = $this->singleton_tags[$this->tag_name];
+    $attrs        = $this->render_attrs();
+    $content      = $this->render_content();
 
-    $output = "<{$this->tag_name}".$this->render_attrs()."".($self_closing? "/>": ">");
-
-    if ($self_closing) return $output;
-
-    $output .= $this->render_content();
-    $output .= "</{$this->tag_name}>";
+    if ($self_closing) $output = "<{$this->tag_name}{$attrs}/>\n";
+    else               $output = "<{$this->tag_name}{$attrs}>{$content}</{$this->tag_name}>\n";
 
     return $output;
+  }
+
+
+  public function __toString()
+  {
+    return $this->render();
   }
 
 }
