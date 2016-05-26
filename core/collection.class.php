@@ -22,13 +22,33 @@ class collection
 
   public function append($child)
   {
-    $this->childs[] = $child;
+    if ($child instanceof collection)
+    {
+      foreach ($child->get_all() as $_child) 
+      {
+        $this->append($_child);
+      } 
+    }
+    else $this->childs[] = $child;
   }
 
 
   public function prepend($child)
   {
-    array_unshift($this->childs, $child);
+    if ($child instanceof collection)
+    {
+      foreach ($child->get_all() as $_child) 
+      {
+        $this->prepend($_child);
+      } 
+    }
+    else array_unshift($this->childs, $child);
+  }
+
+
+  public function lenght()
+  {
+    return count($this->childs);
   }
 
 
@@ -38,51 +58,30 @@ class collection
   }
 
 
+  public function get_list()
+  {
+    $output = array();
+
+    foreach ($this->get_all() as $child) 
+    {
+      if (!($child instanceof tag)) continue;
+
+      $output[] = $child->get_selector()."\n";
+    }
+
+    return $output;
+  }
+
+
   public function find($selector)
   {
     $result = new collection();
 
-    if (preg_match("/^(\w+)/", $selector, $match)) $by_tag = $match[1];
-
-    if (preg_match_all("/\[(\w+)(=[\'\"](.*)[\'\"])*\]/", $selector, $matches))
-    {
-      foreach ($matches[1] as $index => $attr) 
-      {
-        $by_attr[$attr] = $matches[3][$index];
-      }
-    }
-
-    if (preg_match("/#(\w+)/", $selector, $match)) $by_id = $match[1];
-
-    if (preg_match_all("/\.(\w+)/", $selector, $matches))
-    {
-      foreach ($matches[1] as $class_name) 
-      {
-        $by_class[] = $class_name;
-      }
-    }
-
-    if (!$by_tag && empty($by_attr) && !$by_id && empty($by_class)) return $result;
-
-    foreach ($this->childs as $index => $child) 
+    foreach ($this->childs as $child) 
     {
       if (!($child instanceof tag)) continue;
-
-      if ($by_tag && $child->tag_name != $by_tag) continue;
-
-      foreach ($by_attr as $attr => $value) 
-      {
-        if ($child->attr($attr) != $value) continue 2;      
-      }
-
-      if ($by_id && $child->attr("id") != $by_id) continue;
-
-      foreach ($by_class as $class_name) 
-      {
-        if (!$child->has_class($class_name)) continue 2;      
-      }
-
-      $result->append($child);
+      if ($child->match($selector)) $result->append($child);
+                                    $result->append($child->find($selector));
     }
 
     return $result;
@@ -110,6 +109,8 @@ class collection
   }
 
 
+  //------------------------------- childs functions -------------------------------//
+
   public function remove()
   {
     foreach ($this->childs as $child) 
@@ -124,6 +125,15 @@ class collection
     foreach ($this->childs as $child) 
     {
       if ($child instanceof input) $child->value($value);
+    }
+  }
+
+
+  public function attr($key, $value)
+  {
+    foreach ($this->childs as $child) 
+    {
+      if ($child instanceof tag) $child->attr($key, $value);
     }
   }
 

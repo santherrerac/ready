@@ -22,7 +22,7 @@ class input extends tag
       case 'textarea': parent::__construct("textarea"); break;
       default:         
         parent::__construct("input");
-        $this->attr("type", $this->type); 
+        $this->attr("type", $this->type);
 
         if ($this->type == "checkbox") $this->value(1);
         break;
@@ -67,7 +67,7 @@ class input extends tag
   {
     if ($this->type != "checkbox" && $this->type != "radio") return;
 
-    if ($checked) $this->attr("checked");
+    if ($checked) $this->attr("checked", "");
     else          $this->remove_attr("checked");
   }
 
