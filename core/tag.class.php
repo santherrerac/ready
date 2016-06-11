@@ -26,7 +26,7 @@ class tag
                                 'track'   => true,
                                 'wbr'     => true,
                               );  
-  protected $content = array();
+
   protected $attrs   = array();
   protected $style   = array();
   protected $classes = array();
@@ -37,7 +37,7 @@ class tag
 
   function __construct($tag_name)
   {
-    $this->tag_name = $tag_name;
+    $this->tag_name           = $tag_name;
     $this->content_collection = new collection();
   }
 
@@ -155,9 +155,22 @@ class tag
 
       if ($key == "class") $this->set_classes($value);
       if ($key == "style") $this->set_style_properties($value);
+
+      return $this;
     } 
 
     return $this->attrs[$key];
+  }
+
+
+  public function attrs($attrs)
+  {
+    foreach ($attrs as $key => $value) 
+    {
+      $this->attr($key, $value);
+    }
+    
+    return $this;
   }
 
 
@@ -179,6 +192,7 @@ class tag
   public function add_class($class_name)
   {
     $this->classes[$class_name] = true; 
+    return $this;
   }
 
 
@@ -188,6 +202,8 @@ class tag
     {
       $this->add_class($class_name);
     }
+
+    return $this;
   }
 
 
@@ -299,6 +315,8 @@ class tag
 
     $this->content_collection->clear();
     $this->content_collection->append($html);
+
+    return $this;
   }
 
 
@@ -315,6 +333,23 @@ class tag
     if ($html instanceof tag) $html->set_parent($this);
 
     $this->content_collection->prepend($html);
+  }
+
+
+  public function add($tag_name)
+  {
+    if (!is_string($tag_name) && is_callable($tag_name))
+    {
+      call_user_func($tag_name, $this);
+      return $this;
+    }
+    elseif (is_string($tag_name)) 
+    {    
+      $tag = new tag($tag_name);
+      $this->append($tag);
+
+      return $tag;
+    }
   }
 
 

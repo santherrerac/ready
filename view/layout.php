@@ -56,10 +56,7 @@
         </div><!-- /.navbar-collapse -->
     </nav>
 
-<?php include_once($view); ?>
 
-
-<?php print "ready framework, good look san!!<br>"; ?>
 
 </body>
 </html>
