@@ -91,7 +91,7 @@ class tag
     {
       list($parent_selector, $child_selector) = explode(" ", $selector);
 
-      $parent_match = $this->parents($parent_selector)->lenght() || false;
+      $parent_match = $this->parents($parent_selector)->length() || false;
       $child_match  = $this->match($child_selector);
 
       return $parent_match && $child_match;
@@ -311,7 +311,12 @@ class tag
 
   public function html($html)
   {
-    if ($html instanceof tag) $html->set_parent($this);
+         if ($html instanceof tag) $html->set_parent($this);
+    else if (is_string($html))
+    {
+      $reader = new html_reader($html);
+      $html   = $reader->get_tags();
+    }
 
     $this->content_collection->clear();
     $this->content_collection->append($html);

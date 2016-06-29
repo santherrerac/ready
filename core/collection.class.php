@@ -6,7 +6,7 @@ namespace html;
 */
 class collection
 {
-  protected $childs;
+  protected $childs = array();
 
   
   function __construct()
@@ -22,9 +22,12 @@ class collection
 
   public function append($child)
   {
-    if ($child instanceof collection)
+          if ($child instanceof collection) $childs = $child->get_all();
+    else  if (is_array($child))             $childs = $child;
+
+    if ($childs)
     {
-      foreach ($child->get_all() as $_child) 
+      foreach ($childs as $_child) 
       {
         $this->append($_child);
       } 
@@ -35,9 +38,12 @@ class collection
 
   public function prepend($child)
   {
-    if ($child instanceof collection)
+          if ($child instanceof collection) $childs = $child->get_all();
+    else  if (is_array($child))             $childs = $child;
+
+    if ($childs)
     {
-      foreach ($child->get_all() as $_child) 
+      foreach ($childs as $_child) 
       {
         $this->prepend($_child);
       } 
@@ -46,9 +52,21 @@ class collection
   }
 
 
-  public function lenght()
+  public function length()
   {
     return count($this->childs);
+  }
+
+
+  public function last()
+  {
+    return $this->childs[($last = count($this->childs))? $last - 1: 0];
+  }
+
+
+  public function remove_last()
+  {
+    return array_pop($this->childs);
   }
 
 
@@ -135,6 +153,20 @@ class collection
     {
       if ($child instanceof tag) $child->attr($key, $value);
     }
+  }
+
+
+  public function __toString()
+  {
+    $output = "";
+
+    foreach ($this->childs as $child) 
+    {
+           if ($child instanceof tag) $output .= $child->render();
+      else if (is_string($child))     $output .= $child;
+    }
+
+    return $output;
   }
 
 }

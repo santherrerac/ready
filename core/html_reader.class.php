@@ -38,60 +38,66 @@ class html_reader
 
   public function get_tags()
   {
-    $txt = "";
-
-    for ($i = 0; $i < strlen($this->html); $i++) 
+    for ($i = 0, $txt = ""; $i < strlen($this->html); $i++) 
     { 
       $char = $this->html[$i];
 
-      if ($char == "<")
+      if ($char == "<" && $tag = $this->tag($i, $end_tag))
       {
         $txt = $this->push($txt);
-        $tag = $this->tag($i, $end_tag);        
 
         if ($end_tag)
         {
           $top    = $this->top();
-          $childs = array();          
+          $childs = new collection();          
 
           while ($top->tag_name != $tag->tag_name)
           {
-            array_unshift($childs, $this->pop());
+            $childs->prepend($this->pop());
             $top = $this->top();
           }
 
-          $top->childs = $childs;
+          $top->append($childs);
         }
-        else $this->push($tag);        
+        else $this->push($tag);
       }
       else $txt .= $char;
     }
 
-    print_r($this->queue);  
+    if ($txt) $this->push($txt);
+
+    $childs = new collection();
+    $childs->append($this->queue);
+
+    return $childs;  
   }
 
 
   private function tag(&$i, &$end_tag)
   {
+    $i_start  = $i;
     $end_tag  = $this->is_end_tag($i);
     $tag_name = $this->tag_name($i);
-    $tag      = new \StdClass();
 
-    $tag->tag_name = $tag_name;
-
-    for ( ; $i < strlen($this->html); $i++) 
+    if ($tag_name)
     {
-      $char = $this->html[$i];
+      $tag = new tag($tag_name);
 
-      if ($char == ">")  break;
+      for ( ; $i < strlen($this->html); $i++) 
+      {
+        if ($attr = $this->attr($i))
+        {
+          $tag->attr($attr['name'], $attr['value']);
+        }      
 
-      $attr = $this->attr($i);
-      if ($attr) $tag->attrs[$attr['name']] = $attr['value'];     
+        $char = $this->html[$i];
+
+        if ($char == ">") { return $tag; }
+        if ($char == "<") { break; }  
+      }
     }
 
-    print_r($tag); exit;
-
-    return $tag;
+    $i = $i_start;
   }
 
 
@@ -131,77 +137,81 @@ class html_reader
 
   private function attr(&$i)
   {
-    for ( ; $i < strlen($this->html); $i++) 
-    { 
-      $char = $this->html[$i];
-
-      if (!isset($attr['name'])) // find attr
-      {
-        if (preg_match("/[\s\"'>\/=]/", $char))
-        {
-          if ($name)
-          {
-            if ($char == "=") $finding_value = true;
-            $attr['name'] = $name;
-          } 
-        }
-        else $name .= $char;
-      }
-      else // find value
-      {
-        if ($finding_value)
-        {
-          if (preg_match("/[\s\"'<>\/=`]/", $char))
-          {
-            if (!$unquoted_value)
-            {
-              if ($char == '"' || $char == "'") 
-              { 
-                $quoted_value = $this->quotes($i, $char);
-
-                if ($quoted_value)
-                {
-                  $attr['value'] = $quoted_value;
-                  break;
-                }        
-              }
-            }
-            else
-            {
-              $attr['value'] = $unquoted_value;
-              break;
-            }
-          }
-          else $unquoted_value .= $char;
-        }
-        else
-        {
-          if ($char == "=") $finding_value = true;          
-        }
-      }
+    if ($name = $this->attr_name($i))
+    {      
+      $attr['name']  = $name;
+      $attr['value'] = $this->attr_value($i);
     }
 
     return $attr;
   }
 
 
-  private function quotes(&$i, $quote)
+  private function attr_name(&$i)
   {
-    $txt = "";
-    $j   = $i; 
-
-    for ($i++; $i < strlen($this->html); $i++) 
+    for ($name = ""; $i < strlen($this->html); $i++) 
     { 
       $char = $this->html[$i];
-      if ($char == $quote) { $closed = true; break; }
-      $txt .= $char;
+
+      if (!preg_match("/[\s\"'<>\/=]/", $char))
+      {
+        $name .= $char;
+      }
+      else break;
     }
 
-    if (!$closed) { $txt = ""; $i = $j; } 
+    return $name;
+  }
 
-    return $txt;
+
+  private function attr_value(&$i)
+  {
+    for ($i_start = $i; $i < strlen($this->html); $i++) 
+    { 
+      $char = $this->html[$i];
+
+      if (preg_match("/[\s\"'<>\/=`]/", $char))
+      {
+        if ($unquoted_value) return $unquoted_value;
+
+        if ($finding_value)
+        {
+          $is_quote = $char == '"' || $char == "'";
+
+          if ($is_quote && $quoted_value = $this->quotes($i, $char))
+          {
+            return $quoted_value;
+          }
+        }
+        else if ($char == "=") $finding_value = true;
+             
+             if ($char == ">") break;
+        else if ($char == "<") break;
+      }
+      else
+      {
+        if ($finding_value) $unquoted_value .= $char;
+        else                break;
+      }      
+    }
+
+    $i = $i_start;
+  }
+
+
+  private function quotes(&$i, $quote)
+  {
+    for ($i_start = $i, $i++, $txt = ""; $i < strlen($this->html); $i++) 
+    { 
+      $char = $this->html[$i];
+
+      if ($char == $quote) return $txt;
+      else                 $txt .= $char;
+    }
+
+    $i = $i_start;
   }
 
 }
 
- ?>
+?>
