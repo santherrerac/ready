@@ -6,70 +6,58 @@ namespace html;
 *  
 */
 class html_reader
-{  
-  function __construct($html)
-  {
-    $this->html  = $html;
-    $this->queue = array();
+{
+  
+  function __construct()
+  {    
   }
 
 
-  private function top()
+  public function get_elements($html)
   {
-    return $this->queue[($last = count($this->queue))? $last - 1: 0];
-  }
+    $this->html = $html;
+    $elements   = new collection();
 
-
-  private function pop()
-  {
-    return array_pop($this->queue);
-  }
-
-
-  private function push(&$el)
-  {
-    if (is_string($el))
-    {
-      if ($el = trim($el)) $this->queue[] = $el;
-    }
-    else $this->queue[] = $el;
-  }
-
-
-  public function get_tags()
-  {
     for ($i = 0, $txt = ""; $i < strlen($this->html); $i++) 
     { 
       $char = $this->html[$i];
 
       if ($char == "<" && $tag = $this->tag($i, $end_tag))
       {
-        $txt = $this->push($txt);
+        $txt = $elements->append(new element($txt));
 
         if ($end_tag)
-        {
-          $top    = $this->top();
+        {          
           $childs = new collection();          
 
-          while ($top->tag_name != $tag->tag_name)
+          do
           {
-            $childs->prepend($this->pop());
-            $top = $this->top();
-          }
+            $last = $elements->last();
 
-          $top->append($childs);
+            if ($last instanceof tag)
+            {
+              if ($last->_unclosed && $last->tag_name == $tag->tag_name)
+              {
+                unset($last->_unclosed);
+                break;
+              }
+            }           
+
+            $childs->prepend($elements->remove_last());
+          }
+          while($elements->length());
+
+          if ($elements->length()) $last->append($childs);
+          else                     $elements = $childs;
         }
-        else $this->push($tag);
+        else $elements->append($tag);
       }
       else $txt .= $char;
     }
 
-    if ($txt) $this->push($txt);
+    $elements->append(new element($txt));
 
-    $childs = new collection();
-    $childs->append($this->queue);
-
-    return $childs;  
+    return $elements;  
   }
 
 
@@ -82,6 +70,7 @@ class html_reader
     if ($tag_name)
     {
       $tag = new tag($tag_name);
+      $tag->_unclosed = true;
 
       for ( ; $i < strlen($this->html); $i++) 
       {

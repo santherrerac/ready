@@ -6,73 +6,72 @@ namespace html;
 */
 class collection
 {
-  protected $childs = array();
+  protected $elements = array();
 
   
   function __construct()
-  {   
+  {
+    $this->html_reader = new html_reader();   
   }
 
 
   public function clear()
   {
-    $this->childs = array();
+    $this->elements = array();
   }
 
 
-  public function append($child)
+  public function append($var)
   {
-          if ($child instanceof collection) $childs = $child->get_all();
-    else  if (is_array($child))             $childs = $child;
+         if (is_string($var))            $var    = $this->html_reader->get_elements($var);
+         if ($var instanceof collection) $childs = $var->get_all();
+    else if (is_array($var))             $childs = $var;
+    else if ($var instanceof element)    $child  = $var;
 
-    if ($childs)
+    if ($childs) 
     {
-      foreach ($childs as $_child) 
-      {
-        $this->append($_child);
-      } 
+      foreach ($childs as $child) $this->append($child);
     }
-    else $this->childs[] = $child;
+    else if ($child) $this->elements[] = $child;
   }
 
 
-  public function prepend($child)
+  public function prepend($var)
   {
-          if ($child instanceof collection) $childs = $child->get_all();
-    else  if (is_array($child))             $childs = $child;
+         if (is_string($var))            $var    = $this->html_reader->get_elements($var);    
+         if ($var instanceof collection) $childs = $var->get_all();
+    else if (is_array($var))             $childs = $var;
+    else if ($var instanceof element)    $child  = $var;
 
-    if ($childs)
+    if ($childs) 
     {
-      foreach ($childs as $_child) 
-      {
-        $this->prepend($_child);
-      } 
+      foreach ($childs as $child) $this->prepend($child);
     }
-    else array_unshift($this->childs, $child);
+    else if ($child) array_unshift($this->elements, $child);
   }
 
 
   public function length()
   {
-    return count($this->childs);
+    return count($this->elements);
   }
 
 
   public function last()
   {
-    return $this->childs[($last = count($this->childs))? $last - 1: 0];
+    return $this->elements[($last = count($this->elements))? $last - 1: 0];
   }
 
 
   public function remove_last()
   {
-    return array_pop($this->childs);
+    return array_pop($this->elements);
   }
 
 
   public function get_all()
   {
-    return $this->childs;
+    return $this->elements;
   }
 
 
@@ -95,7 +94,7 @@ class collection
   {
     $result = new collection();
 
-    foreach ($this->childs as $child) 
+    foreach ($this->elements as $child) 
     {
       if (!($child instanceof tag)) continue;
       if ($child->match($selector)) $result->append($child);
@@ -120,9 +119,9 @@ class collection
 
   public function remove_child(tag $child)
   {
-    foreach ($this->childs as $index => $_child) 
+    foreach ($this->elements as $index => $_child) 
     {
-      if ($child == $_child) { unset($this->childs[$index]); break; }
+      if ($child == $_child) { unset($this->elements[$index]); break; }
     }
   }
 
@@ -131,7 +130,7 @@ class collection
 
   public function remove()
   {
-    foreach ($this->childs as $child) 
+    foreach ($this->elements as $child) 
     {
       if ($child instanceof tag) $child->remove();
     }
@@ -140,7 +139,7 @@ class collection
 
   public function value($value)
   {
-    foreach ($this->childs as $child) 
+    foreach ($this->elements as $child) 
     {
       if ($child instanceof input) $child->value($value);
     }
@@ -149,7 +148,7 @@ class collection
 
   public function attr($key, $value)
   {
-    foreach ($this->childs as $child) 
+    foreach ($this->elements as $child) 
     {
       if ($child instanceof tag) $child->attr($key, $value);
     }
@@ -158,13 +157,7 @@ class collection
 
   public function __toString()
   {
-    $output = "";
-
-    foreach ($this->childs as $child) 
-    {
-           if ($child instanceof tag) $output .= $child->render();
-      else if (is_string($child))     $output .= $child;
-    }
+    $output = implode($this->elements);
 
     return $output;
   }
