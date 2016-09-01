@@ -1,17 +1,18 @@
 <?php 
 
-namespace html;
+namespace core\html;
 /**
 * 
 */
 class collection
 {
   protected $elements = array();
+  private   $parser;
 
   
   function __construct()
   {
-    $this->html_reader = new html_reader();   
+    $this->parser = new parser();   
   }
 
 
@@ -21,26 +22,11 @@ class collection
   }
 
 
-  public function append($var)
-  {
-         if (is_string($var))            $var    = $this->html_reader->get_elements($var);
-         if ($var instanceof collection) $childs = $var->get_all();
-    else if (is_array($var))             $childs = $var;
-    else if ($var instanceof element)    $child  = $var;
-
-    if ($childs) 
-    {
-      foreach ($childs as $child) $this->append($child);
-    }
-    else if ($child) $this->elements[] = $child;
-  }
-
-
   public function prepend($var)
   {
-         if (is_string($var))            $var    = $this->html_reader->get_elements($var);    
+         if (is_string($var))            $var    = $this->parser->get_elements($var);    
          if ($var instanceof collection) $childs = $var->get_all();
-    else if (is_array($var))             $childs = $var;
+    // else if (is_array($var))             $childs = $var;
     else if ($var instanceof element)    $child  = $var;
 
     if ($childs) 
@@ -51,9 +37,36 @@ class collection
   }
 
 
+  public function append($var)
+  {
+         if (is_string($var))            $var    = $this->parser->get_elements($var);
+         if ($var instanceof collection) $childs = $var->get_all();
+    // else if (is_array($var))             $childs = $var;
+    else if ($var instanceof element)    $child  = $var;
+
+    if ($childs) 
+    {
+      foreach ($childs as $child) $this->append($child);
+      
+      // if ($var->length() == 1) return $var->first();
+    }
+    else if ($child)
+    {
+      $this->elements[] = $child;
+      // return $var;
+    }
+  }
+
+
   public function length()
   {
     return count($this->elements);
+  }
+
+
+  public function first()
+  {
+    return $this->elements[key($this->elements)];
   }
 
 
@@ -126,9 +139,17 @@ class collection
   }
 
 
+  public function __toString()
+  {
+    $output = implode($this->elements);
+
+    return $output;
+  }
+
+
   //------------------------------- childs functions -------------------------------//
 
-  public function remove()
+  /*public function remove()
   {
     foreach ($this->elements as $child) 
     {
@@ -152,15 +173,60 @@ class collection
     {
       if ($child instanceof tag) $child->attr($key, $value);
     }
+
+    return $this;
   }
 
 
-  public function __toString()
+  public function html($html)
   {
-    $output = implode($this->elements);
+    foreach ($this->elements as $element) 
+    {
+      if ($element instanceof tag) $element->html($html);
+    }
 
-    return $output;
+    return $this;
   }
+
+
+  public function add_classes($classes)
+  {
+    foreach ($this->elements as $element) 
+    {
+      if ($element instanceof tag) $element->add_classes($classes);
+    }
+
+    return $this;
+  }*/
+
+
+  public function get_tags()
+  {
+    $tags = array();
+
+    foreach ($this->elements as $element)
+    {
+      if ($element instanceof tag) $tags[] = $element;
+    } 
+
+    return $tags;
+  }
+
+
+  /*public function add_class($class_name)
+  {
+    foreach ($this->get_tags() as $element) $element->add_class($class_name);
+
+    return $this;
+  }*/
+
+  
+  // public function __call($method, $arguments)
+  // {
+  //   foreach ($this->get_tags() as $tag) call_user_func_array(array($tag, $method), $arguments);
+
+  //   return $this;
+  // }
 
 }
 

@@ -1,11 +1,11 @@
 <?php 
 
-namespace html;
+namespace core\html;
 
 /**
 *  
 */
-class html_reader
+class parser
 {
   
   function __construct()
@@ -24,7 +24,7 @@ class html_reader
 
       if ($char == "<" && $tag = $this->tag($i, $end_tag))
       {
-        $txt = $elements->append(new element($txt));
+        if ($txt) $txt = $elements->append(new element($txt));
 
         if ($end_tag)
         {          
@@ -55,7 +55,7 @@ class html_reader
       else $txt .= $char;
     }
 
-    $elements->append(new element($txt));
+    if ($txt) $elements->append(new element($txt));
 
     return $elements;  
   }
@@ -108,9 +108,7 @@ class html_reader
 
   private function tag_name(&$i)
   {
-    $tag_name = "";
-
-    for ( ; $i < strlen($this->html); $i++) 
+    for ($tag_name = ""; $i < strlen($this->html); $i++) 
     { 
       $char = $this->html[$i];
 
@@ -185,6 +183,7 @@ class html_reader
     }
 
     $i = $i_start;
+    return "";
   }
 
 
@@ -199,6 +198,7 @@ class html_reader
     }
 
     $i = $i_start;
+    return "";
   }
 
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace html;
+namespace core\html;
 
 /**
 *

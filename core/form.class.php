@@ -33,7 +33,7 @@ class form
  
         foreach ($properties as $property_name => $value) 
         {
-            $input       = new form_element();
+            $input       = new input();
             $input->id   = get_class($this->model)."[$property_name]";        
             $input->name = get_class($this->model)."[$property_name]";
 
