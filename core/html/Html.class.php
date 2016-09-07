@@ -1,10 +1,10 @@
 <?php
 
-namespace core\html;
+namespace Core\Html;
 
 class Html
 {
-  public function parse($str)
+  public static function parse($str)
   {
     $parser = new parser();
     return $parser->get_elements($str);

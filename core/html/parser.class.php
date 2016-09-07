@@ -45,7 +45,7 @@ class parser
 
             $childs->prepend($elements->remove_last());
           }
-          while($elements->length());
+          while ($elements->length());
 
           if ($elements->length()) $last->append($childs);
           else                     $elements = $childs;
@@ -200,6 +200,72 @@ class parser
     $i = $i_start;
     return "";
   }
+
+
+  public function parseSelector($text)
+  {
+    $selectors = array();
+    $text      = new IterableString($text);
+
+    do
+    {
+      if ($selector = parser::selector($text))
+      {
+        $selectors[] = $selector;
+      }
+    } 
+    while ($text->next());
+
+    return $selectors;
+  }
+
+
+  private function selector($text)
+  {
+    $char     = $text->current();
+    $selector = "";
+
+    if ($char == ".")     return parser::classSelector  ($text);
+    // if (preg_match("/[#]/", $char))      return parser::idSelector     ($text, $i);
+    // if (preg_match("/[\[]/", $char))     return parser::attrSelector   ($text, $i);
+    // if (preg_match("/[:]/", $char))      return parser::colonSelector  ($text, $i);
+    // if (preg_match("/[a-zA-Z]/", $char)) return parser::elementSelector($text, $i);
+
+    return $selector;
+  }
+
+
+  const REGEX_CSS_IDENTIFIERS = "(?!(\d)|(--)|(-\d))[a-zA-Z0-9-_]+";
+  const REGEX_CSS_CLASS       = "/^\.".self::REGEX_CSS_IDENTIFIERS."$/";
+
+
+  public function classSelector($text)
+  {
+    return $text->walkOnMatch(self::REGEX_CSS_CLASS);
+  }
+
+
+  public function idSelector($text, &$i)
+  {
+    $idRegex = "/[a-zA-Z0-9\-]/";
+
+    for ($i_start = $i; $selector = "", $i++; $i < strlen($text); $i++) 
+    {
+      $char = $text[$i];
+
+      if (!preg_match($idRegex, $char))
+      {
+        if ($selector) return $selector;
+        else           break;
+      }
+      
+      $selector .= $char;
+    }
+
+    $i = $i_start;
+    return "";
+  }
+
 
 }
 

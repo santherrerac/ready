@@ -23,14 +23,14 @@ class tag extends element
                             'wbr'     => true,
                           );  
 
-  public $tag_name;
+  public    $tag_name;
   protected $attrs   = array();
   protected $style   = array();
   protected $classes = array();
   protected $content_collection;
 
 
-  function __construct($tag_name)
+  function __construct($tag_name = "div")
   {
     $this->tag_name           = $tag_name;
     $this->content_collection = new collection();
@@ -59,8 +59,11 @@ class tag extends element
     {
       $this->attrs[$key] = $value;
 
-      if ($key == "class") $this->set_classes($value);
-      if ($key == "style") $this->set_style_properties($value);
+      switch ($key)
+      {
+        case 'class': $this->set_classes($value);          break;
+        case 'style': $this->set_style_properties($value); break;
+      }
 
       return $this;
     } 
@@ -190,10 +193,7 @@ class tag extends element
 
     foreach ($styles as $style) 
     {
-      $key_value = explode(":", $style);
-      $key       = trim($key_value[0]);
-      $value     = trim($key_value[1]);
-
+      list($key, $value) = explode(":", $style);      
       if ($key && $value) $this->style[$key] = $value;
     }
   }
@@ -240,18 +240,6 @@ class tag extends element
 
     $this->content_collection->prepend($html);
   }
-
-
-  // public function add($tag_name)
-  // {
-  //   if (is_string($tag_name)) 
-  //   {    
-  //     $tag = new tag($tag_name);
-  //     $this->append($tag);
-
-  //     return $tag;
-  //   }
-  // }
 
 
   public function remove_child(element $child)
