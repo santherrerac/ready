@@ -1,5 +1,7 @@
 <?php 
 
+namespace Core\String;
+
 /**
 * 
 */
@@ -15,13 +17,27 @@ class IterableString
   }
 
 
-  public function next()
+  public function next($q = 1)
   {
-    $next = $this->position + 1;
+    $next = $this->position + $q;
 
     if ($next < strlen($this->string))
     {
       $this->position = $next;
+      return true;
+    }
+
+    return false;
+  }
+
+
+  public function prev($q = 1)
+  {
+    $prev = $this->position - $q;
+
+    if ($prev >= 0)
+    {
+      $this->position = $prev;
       return true;
     }
 
@@ -43,7 +59,7 @@ class IterableString
 
   public function savePos()
   {
-    $this->_position = $this->position;
+    return $this->_position = $this->position;
   }
 
 
@@ -53,26 +69,34 @@ class IterableString
   }
 
 
-  public function walkOnMatch($regex)
+  public function walkOnMatch($regex, $minLen = 1)
   {
     $result = "";  
-    $this->savePos();
+    $start  = $this->savePos();
 
     do
     {
       $result .= $this->current();
 
-      if (!preg_match($regex, $result))
+      if (strlen($result) >= $minLen)
       {
-        if ($result) return $result;
-        else         break;
+        if (!preg_match($regex, $result))
+        {
+          $result = substr($result, 0, -1);
+          $this->prev();
+          break;
+        }        
       }
     }
     while ($this->next());
 
-    $this->rewind();
+    if (!$result || strlen($result) < $minLen)
+    {
+      $result = "";
+      $this->rewind();
+    } 
 
-    return "";
+    return $result;
   }
 
 }

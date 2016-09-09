@@ -1,7 +1,8 @@
 <?php 
 
-namespace core\html;
+namespace Core\Html;
 
+use Core\String\IterableString;
 /**
 *  
 */
@@ -201,17 +202,31 @@ class parser
     return "";
   }
 
+  /**************************** Selector ******************************/
 
-  public function parseSelector($text)
+  static $selectorsParsers = array(
+                              "classSelector", 
+                              'idSelector', 
+                              'attrSelector', 
+                              'colonSelector', 
+                              'elementSelector'
+                            );
+
+
+  public static function selector($text)
   {
     $selectors = array();
     $text      = new IterableString($text);
 
     do
     {
-      if ($selector = parser::selector($text))
-      {
-        $selectors[] = $selector;
+      foreach (Parser::$selectorsParsers as $parser) 
+      {          
+        if ($selector = call_user_func(array(self, $parser), $text))
+        {
+          $selectors[] = $selector;
+          break;
+        }
       }
     } 
     while ($text->next());
@@ -219,53 +234,35 @@ class parser
     return $selectors;
   }
 
+  const REGEX_CSS_IDENTIFIERS = "(?!\d|--|-\d)[a-zA-Z0-9-_]+";
+  const REGEX_CSS_CLASS       = "/^\.(?!\d|--|-\d)[a-zA-Z0-9-_]+$/";
+  const REGEX_ID_CLASS        = "/^\#(?!\d|--|-\d)[a-zA-Z0-9-_]+$/";
+  const REGEX_COLON_CLASS     = "/^\:(?!\d|--|-\d)[a-zA-Z0-9-_]+$/";
+  const REGEX_ELEMENT_CLASS   = "/^(?!\d|--|-\d)[a-zA-Z0-9-_]+$/";
 
-  private function selector($text)
+
+  public static function classSelector(IterableString $text)
   {
-    $char     = $text->current();
-    $selector = "";
-
-    if ($char == ".")     return parser::classSelector  ($text);
-    // if (preg_match("/[#]/", $char))      return parser::idSelector     ($text, $i);
-    // if (preg_match("/[\[]/", $char))     return parser::attrSelector   ($text, $i);
-    // if (preg_match("/[:]/", $char))      return parser::colonSelector  ($text, $i);
-    // if (preg_match("/[a-zA-Z]/", $char)) return parser::elementSelector($text, $i);
-
-    return $selector;
+    return $text->walkOnMatch(parser::REGEX_CSS_CLASS, 2);
   }
 
 
-  const REGEX_CSS_IDENTIFIERS = "(?!(\d)|(--)|(-\d))[a-zA-Z0-9-_]+";
-  const REGEX_CSS_CLASS       = "/^\.".self::REGEX_CSS_IDENTIFIERS."$/";
-
-
-  public function classSelector($text)
+  public static function idSelector(IterableString $text)
   {
-    return $text->walkOnMatch(self::REGEX_CSS_CLASS);
+    return $text->walkOnMatch(parser::REGEX_ID_CLASS, 2);
   }
 
 
-  public function idSelector($text, &$i)
+  public static function colonSelector(IterableString $text)
   {
-    $idRegex = "/[a-zA-Z0-9\-]/";
-
-    for ($i_start = $i; $selector = "", $i++; $i < strlen($text); $i++) 
-    {
-      $char = $text[$i];
-
-      if (!preg_match($idRegex, $char))
-      {
-        if ($selector) return $selector;
-        else           break;
-      }
-      
-      $selector .= $char;
-    }
-
-    $i = $i_start;
-    return "";
+    return $text->walkOnMatch(parser::REGEX_COLON_CLASS, 2);
   }
 
+
+  public static function elementSelector(IterableString $text)
+  {
+    return $text->walkOnMatch(parser::REGEX_ELEMENT_CLASS);
+  }
 
 }
 

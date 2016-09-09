@@ -1,12 +1,24 @@
 <?php 
 
-require "core/autoload.php";
+require "Core/autoload.php";
 
-use core\html\tag;
-use core\html\input;
-use Core\Html\matcher;
+// use core\html\tag;
+// use core\html\input;
+use Core\Html\Parser;
+use Core\String\IterableString;
 
-matcher::parse("#das.clase .clase2");
+$selector = Parser::selector(".clase..#das+.clase2 dsa:disabled:");
+
+print_r($selector);
+
+// $result = parser::classSelector(new IterableString(".clase"));
+
+// print_r($result);
+
+// print preg_match("/^\.(?!(\d)|(--)|(-\d))[a-zA-Z0-9-_]*$/", ".-_clase", $match);
+// print_r($match);
+
+
 exit;
 
 $div = new tag("div");
